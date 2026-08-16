@@ -66,10 +66,12 @@ chore: bump next to 16.4
 
 ## Branches and PRs
 
-- Branch off `main`; use a short descriptive name (e.g. `fix/gene-search-indexing`).
+- If you don't have push access to this repo, fork it and branch off `main` in your fork; open the PR against `chintondutta/nucleus:main`. You don't need to be added as a collaborator to contribute.
+- Use a short descriptive branch name (e.g. `fix/gene-search-indexing`).
 - Keep PRs focused — one logical change per PR is easier to review than a bundle of unrelated fixes.
 - Describe *why* the change is needed, not just what changed, especially for anything touching the backend contract (`VariantRequest`) or environment variables.
 - Link any related issue.
+- `main` is protected: PRs need the "Lint & typecheck" check passing and an approving review from a code owner ([@chintondutta](https://github.com/chintondutta), see `.github/CODEOWNERS`) before they can merge. If your PR touches `backend/`, mention it explicitly — a backend change can't be verified by CI (see [Deployment](#deployment)), so it gets tested manually against the real Modal deployment before approval.
 
 ## Security
 
