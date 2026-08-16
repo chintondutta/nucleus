@@ -37,6 +37,10 @@ modal deploy main.py
 
 This runs on an H100 GPU via Modal — every deploy and every analysis request afterward costs real GPU time on whoever's Modal account it's deployed under. There's currently one shared deployment; there's no per-PR or per-branch isolated backend. If your PR touches `backend/main.py` or `backend/requirements.txt`, say so in the PR description and coordinate the redeploy with whoever holds the Modal account — don't deploy speculatively just to test something small.
 
+**Unlike a setup with per-environment auth (e.g. a service needing separate dev/prod instances because production auth rejects preview origins), there's no equivalent split to maintain here.** Modal's `@modal.fastapi_endpoint` reflects whatever `Origin` header a request sends (verified: `access-control-allow-origin` echoes back the caller's origin, `access-control-allow-credentials: true`). So Vercel Preview deployments (random `*.vercel.app` origins) and Production both call the one Modal backend with zero CORS configuration needed — nothing to keep in sync across environments there.
+
+**Environment variable:** set `NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL` in Vercel's dashboard (Project Settings → Environment Variables) for both the Preview and Production scopes, pointing at the same Modal URL. If it's missing, the build itself fails — `src/env.js` validates it with Zod at build time, so this can't silently ship broken.
+
 ## Before opening a PR
 
 There's no automated test suite for the actual inference pipeline (it needs a GPU), so please verify your change manually:

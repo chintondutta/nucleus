@@ -14,7 +14,7 @@ We'll acknowledge your report within **3 business days** and aim to provide an i
 
 ## Scope
 
-Nucleus currently has **no authentication** on the frontend or the backend analysis endpoint — this is a known, accepted state for local/hackathon use, not something you need to report. Reports are especially welcome for:
+Nucleus currently has **no authentication** on the frontend or the backend analysis endpoint — this is a known, accepted state for local/hackathon use, not something you need to report. Note that the Modal endpoint URL itself is **not a secret and can't become one by hiding it**: it's read from `NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL`, which Next.js inlines into the client-side JavaScript bundle by design (the browser has to call it directly) — anyone who loads the deployed site can read it from the network tab or the built JS, regardless of whether it's committed to the repo. Don't rely on the URL being obscure; if this needs real protection, it needs actual auth, not secrecy. Reports are especially welcome for:
 
 - Any way to make the Modal analysis endpoint execute arbitrary code, not just score a variant (e.g. injection through `variant_position`, `alternative`, `genome`, or `chromosome` in the `VariantRequest` body)
 - Server-side request forgery via the genome-sequence fetch (`get_genome_sequence` in `backend/main.py`, which builds a UCSC API URL from request parameters)
