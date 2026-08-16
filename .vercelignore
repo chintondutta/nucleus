@@ -1,0 +1,7 @@
+# backend/ is a Modal-deployed, GPU-only service (Evo2 inference) -- it
+# cannot run on Vercel (no GPU on Vercel's Python runtime, and
+# backend/main.py exports a modal.App, not a FastAPI/ASGI app Vercel
+# could serve anyway). Excluded so Vercel's multi-service import
+# detection never proposes deploying it. Deploy it separately with
+# `modal deploy backend/main.py` -- see CONTRIBUTING.md.
+backend/
