@@ -1,0 +1,4 @@
+# Every PR needs a review from @chintondutta before it can be merged
+# into main (enforced by branch protection's "require review from
+# code owners" setting).
+* @chintondutta
