@@ -127,6 +127,7 @@ def run_brca1_analysis():
 
     # Add delta scores to dataframe
     brca1_subset[f'evo2_delta_score'] = delta_scores
+    brca1_subset.to_csv('/root/brca1_scores.csv', index=False)
 
     y_true = (brca1_subset['class'] == 'LOF')
     auroc = roc_auc_score(y_true, -brca1_subset['evo2_delta_score'])
@@ -195,7 +196,7 @@ def run_brca1_analysis():
     buffer.seek(0)
     plot_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
-    return {'variants': brca1_subset.to_dict(orient="records"), "plot": plot_data, "auroc": auroc}
+    return {'variants': brca1_subset.to_dict(orient="records"), "plot": plot_data, "auroc": auroc, "csv": brca1_subset.to_csv(index=False)}
 
 
 @app.function()
@@ -258,6 +259,14 @@ def get_genome_sequence(position, genome: str, chromosome: str, window_size=8192
     return sequence, start
 
 
+import math
+
+W = -0.1417520669027741
+B = -1.3865110165468506
+
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
+
 def analyze_variant(relative_pos_in_window, reference, alternative, window_seq, model):
     var_seq = window_seq[:relative_pos_in_window] + \
         alternative + window_seq[relative_pos_in_window+1:]
@@ -267,16 +276,9 @@ def analyze_variant(relative_pos_in_window, reference, alternative, window_seq, 
 
     delta_score = var_score - ref_score
 
-    threshold = -0.0009178519
-    lof_std = 0.0015140239
-    func_std = 0.0009016589
-
-    if delta_score < threshold:
-        prediction = "Likely pathogenic"
-        confidence = min(1.0, abs(delta_score - threshold) / lof_std)
-    else:
-        prediction = "Likely benign"
-        confidence = min(1.0, abs(delta_score - threshold) / func_std)
+    prob_pathogenic = sigmoid(W * delta_score + B)
+    prediction = "Likely pathogenic" if prob_pathogenic > 0.5 else "Likely benign"
+    confidence = prob_pathogenic if prediction == "Likely pathogenic" else 1 - prob_pathogenic
 
     return {
         "reference": reference,
