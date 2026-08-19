@@ -136,7 +136,7 @@ export default function GeneViewer({
     };
 
     void initializeGeneData();
-  }, [gene, genomeId]);
+  }, [gene, fetchGeneSequence]);
 
   const handleSequenceClick = useCallback(
     (position: number, nucleotide: string) => {
@@ -182,7 +182,7 @@ export default function GeneViewer({
     void fetchGeneSequence(start, end);
   }, [startPosition, endPosition, fetchGeneSequence, geneBounds]);
 
-  const fetchClinvarVariants = async () => {
+  const fetchClinvarVariants = useCallback(async () => {
     if (!gene.chrom || !geneBounds) return;
 
     setIsLoadingClinvar(true);
@@ -202,13 +202,13 @@ export default function GeneViewer({
     } finally {
       setIsLoadingClinvar(false);
     }
-  };
+  }, [gene.chrom, geneBounds, genomeId]);
 
   useEffect(() => {
     if (geneBounds) {
       void fetchClinvarVariants();
     }
-  }, [geneBounds]);
+  }, [geneBounds, fetchClinvarVariants]);
 
   const showComparison = (variant: ClinvarVariant) => {
     if (variant.evo2Result) {
