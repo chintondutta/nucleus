@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { Vector3, WebGLRenderer } from "three";
+import type { Vector3, WebGLRenderer, PerspectiveCamera } from "three";
+
+const HELIX_HEIGHT = 24; 
 
 export function DnaHelix() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -11,6 +13,7 @@ export function DnaHelix() {
 
     let animId: number;
     let renderer: WebGLRenderer | null = null;
+    let resizeObserver: ResizeObserver | null = null;
     const el = mountRef.current;
 
     const init = async () => {
@@ -19,9 +22,23 @@ export function DnaHelix() {
       const width = el.clientWidth;
       const height = el.clientHeight;
 
+      
+      const fitCameraToContainer = (
+        camera: PerspectiveCamera,
+        w: number,
+        h: number,
+      ) => {
+        camera.aspect = w / h;
+        const vFov = (camera.fov * Math.PI) / 180;
+        const distanceForHeight = HELIX_HEIGHT / (2 * Math.tan(vFov / 2));
+        const aspectPadding = Math.max(1, 1 / camera.aspect) * 1.15;
+        camera.position.z = distanceForHeight * aspectPadding * 0.55;
+        camera.updateProjectionMatrix();
+      };
+
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-      camera.position.set(0, 0, 20);
+      fitCameraToContainer(camera, width, height);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(width, height);
@@ -29,7 +46,6 @@ export function DnaHelix() {
       renderer.setClearColor(0x000000, 0);
       el.appendChild(renderer.domElement);
 
-      // Lighting
       scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 
       const warmLight = new THREE.DirectionalLight(0xffa060, 1.8);
@@ -44,10 +60,9 @@ export function DnaHelix() {
 
       const TURNS = 4;
       const SEGMENTS = 100 * TURNS;
-      const HEIGHT = 24;
+      const HEIGHT = HELIX_HEIGHT;
       const RADIUS = 2.6;
 
-      // Build strand point arrays
       const pts1: Vector3[] = [];
       const pts2: Vector3[] = [];
 
@@ -62,14 +77,12 @@ export function DnaHelix() {
       const curve1 = new THREE.CatmullRomCurve3(pts1);
       const curve2 = new THREE.CatmullRomCurve3(pts2);
 
-      // Strand tubes
       const tube1 = new THREE.TubeGeometry(curve1, SEGMENTS, 0.13, 8, false);
       group.add(new THREE.Mesh(tube1, new THREE.MeshPhongMaterial({ color: 0xde8246, shininess: 90 })));
 
       const tube2 = new THREE.TubeGeometry(curve2, SEGMENTS, 0.13, 8, false);
       group.add(new THREE.Mesh(tube2, new THREE.MeshPhongMaterial({ color: 0x4a8f50, shininess: 90 })));
 
-      // Base pair rungs
       const nucColors = [0x4ade80, 0xf87171, 0xfbbf24, 0x60a5fa];
       const PAIRS = TURNS * 10;
 
@@ -85,14 +98,12 @@ export function DnaHelix() {
         const color = nucColors[i % 4]!;
         const mat = new THREE.MeshPhongMaterial({ color, shininess: 70 });
 
-        // Rung cylinder
         const rungGeo = new THREE.CylinderGeometry(0.065, 0.065, len, 6);
         const rung = new THREE.Mesh(rungGeo, mat);
         rung.position.copy(mid);
         rung.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
         group.add(rung);
 
-        // Junction spheres on each strand
         const sGeo = new THREE.SphereGeometry(0.19, 8, 8);
         const sMat = new THREE.MeshPhongMaterial({ color, shininess: 110 });
 
@@ -106,6 +117,17 @@ export function DnaHelix() {
       }
 
       scene.add(group);
+
+      resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry || !renderer) return;
+        const w = entry.contentRect.width;
+        const h = entry.contentRect.height;
+        if (w === 0 || h === 0) return;
+        fitCameraToContainer(camera, w, h);
+        renderer.setSize(w, h);
+      });
+      resizeObserver.observe(el);
 
       let t = 0;
       const animate = () => {
@@ -122,6 +144,7 @@ export function DnaHelix() {
 
     return () => {
       cancelAnimationFrame(animId);
+      resizeObserver?.disconnect();
       if (renderer) {
         try { el.removeChild(renderer.domElement); } catch {}
         renderer.dispose();

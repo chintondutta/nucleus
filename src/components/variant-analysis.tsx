@@ -286,75 +286,89 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                   </div>
                 );
               })[0]}
+
           {variantError && (
             <div className="mt-4 rounded-md bg-red-50 p-3 text-xs text-red-600">
               {variantError}
             </div>
           )}
+
           {variantResult && (
-            <div className="mt-6 rounded-md border border-[#3c4f3d]/10 bg-[#e9eeea]/30 p-4">
-              <h4 className="mb-3 text-sm font-medium text-[#3c4f3d]">
-                Analysis Result
-              </h4>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <div className="mb-2">
-                    <div className="text-xs font-medium text-[#3c4f3d]/70">
-                      Variant
-                    </div>
-                    <div className="text-sm">
-                      {gene?.symbol} {variantResult.position}{" "}
-                      <span className="font-mono">
-                        {variantResult.reference}
-                        {">"}
-                        {variantResult.alternative}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-[#3c4f3d]/70">
-                      Delta likelihood score
-                    </div>
-                    <div className="text-sm">
-                      {variantResult.delta_score.toFixed(6)}
-                    </div>
-                    <div className="text-xs text-[#3c4f3d]/60">
-                      Negative score indicates loss of function
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-[#3c4f3d]/70">
-                    Prediction
-                  </div>
-                  <div
-                    className={`inline-block rounded-lg px-3 py-1 text-xs ${getClassificationColorClasses(variantResult.prediction)}`}
-                  >
-                    {variantResult.prediction}
-                  </div>
-                  <div className="mt-3">
-                    <div className="text-xs font-medium text-[#3c4f3d]/70">
-                      Confidence
-                    </div>
-                    <div className="mt-1 h-2 w-full rounded-full bg-[#e9eeea]">
-                      <div
-                        className={`h-2 rounded-full ${variantResult.prediction.includes("pathogenic") ? "bg-red-600" : "bg-green-600"}`}
-                        style={{
-                          width: `${Math.min(100, variantResult.classification_confidence * 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div className="mt-1 text-right text-xs text-[#3c4f3d]/60">
-                      {Math.round(
-                        variantResult.classification_confidence * 100,
-                      )}
-                      %
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+  <div className="mt-6 rounded-xl border border-[#3c4f3d]/15 bg-white p-6 shadow-sm">
+    <div className="mb-5 flex items-center justify-between">
+      <h4 className="text-base font-medium text-[#3c4f3d]">
+        Analysis Result
+      </h4>
+      <span
+        className={`inline-block rounded-lg px-3 py-1 text-xs font-medium ${getClassificationColorClasses(variantResult.prediction)}`}
+      >
+        {variantResult.prediction}
+      </span>
+    </div>
+
+    <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+      {/* Left — variant + delta score */}
+      <div className="flex-1 space-y-5">
+        <div>
+          <div className="text-xs font-medium tracking-wide text-[#3c4f3d]/60 uppercase">
+            Variant
+          </div>
+          <div className="mt-1 text-lg font-semibold text-[#3c4f3d]">
+            {gene?.symbol} {variantResult.position}{" "}
+            <span className="font-mono text-base font-normal">
+              {variantResult.reference}
+              {">"}
+              {variantResult.alternative}
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-lg bg-[#3c4f3d]/5 p-4">
+          <div className="text-xs font-medium tracking-wide text-[#3c4f3d]/60 uppercase">
+            Delta likelihood score
+          </div>
+          <div className="mt-1 font-mono text-2xl font-semibold text-[#3c4f3d]">
+            {variantResult.delta_score.toFixed(6)}
+          </div>
+          <div className="mt-1 text-xs text-[#3c4f3d]/60">
+            Negative score indicates loss of function
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="hidden h-32 w-px bg-[#3c4f3d]/10 sm:block" />
+
+      {/* Right — bigger confidence donut */}
+      <div className="flex flex-shrink-0 flex-col items-center gap-2">
+        <div
+          className="relative flex h-40 w-40 items-center justify-center rounded-full"
+          style={{
+            background: `conic-gradient(${
+              variantResult.prediction.toLowerCase().includes("pathogenic")
+                ? "#dc2626"
+                : "#16a34a"
+            } ${
+              Math.min(100, variantResult.classification_confidence * 100) * 3.6
+            }deg, #e2e7e2 0deg)`,
+          }}
+        >
+          <div className="absolute flex h-[116px] w-[116px] flex-col items-center justify-center rounded-full bg-white">
+            <span className="text-3xl font-semibold text-[#3c4f3d]">
+              {Math.round(
+                Math.min(100, variantResult.classification_confidence * 100),
+              )}
+              %
+            </span>
+            <span className="mt-0.5 text-[11px] text-[#3c4f3d]/50">
+              confidence
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         </CardContent>
       </Card>
     );
