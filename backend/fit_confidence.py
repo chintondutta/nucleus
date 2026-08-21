@@ -3,7 +3,7 @@ from sklearn.linear_model import LogisticRegression
 
 df = pd.read_csv("brca1_variants.csv")
 
-X = df[['evo2_delta_score']].values
+X = (df[['evo2_delta_score']] * 1000).values
 y = (df['class'] == 'LOF').astype(int).values
 
 clf = LogisticRegression().fit(X, y)
